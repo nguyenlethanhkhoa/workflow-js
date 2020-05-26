@@ -1,26 +1,10 @@
+import { IDirection } from "./direction.interface";
+
 export interface ICanvas {
   element: HTMLCanvasElement;
   context: CanvasRenderingContext2D;
   isDrawingNodeDirection: boolean;
   nodeDirection: IDirection;
-}
-
-export interface IDirection {
-  from: IPosition;
-  fromSide: string;
-  to: IPosition;
-  toSide: string;
-  color: string;
-}
-
-export interface ISize {
-  width: number;
-  height: number;
-}
-
-export interface IPosition {
-  x: number;
-  y: number;
 }
 
 export const CANVAS_LINE_WIDTH = 2;

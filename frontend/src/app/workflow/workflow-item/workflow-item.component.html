@@ -181,20 +181,20 @@
     />
   </div>
 
-  <div class="top-node node" (click)="bindingNode($event, 'top')"></div>
+  <div class="top-node node" (click)="bindingNode($event, SIDE.TOP)"></div>
   <div
     class="left-node node"
     [ngClass]="{ 'true-node': model.type == WORKFLOW_ITEM.TYPE.CONDITION }"
-    (click)="bindingNode($event, 'left')"
+    (click)="bindingNode($event, SIDE.LEFT)"
   ></div>
   <div
     class="right-node node"
     [ngClass]="{ 'false-node': model.type == WORKFLOW_ITEM.TYPE.CONDITION }"
-    (click)="bindingNode($event, 'right')"
+    (click)="bindingNode($event, SIDE.RIGHT)"
   ></div>
   <div
     class="bottom-node node"
     *ngIf="model.type != WORKFLOW_ITEM.TYPE.CONDITION"
-    (click)="bindingNode($event, 'bottom')"
+    (click)="bindingNode($event, SIDE.BOTTOM)"
   ></div>
 </div>

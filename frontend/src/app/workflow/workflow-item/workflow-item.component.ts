@@ -7,8 +7,9 @@ import {
   EventEmitter,
   AfterViewInit,
 } from "@angular/core";
-import { CANVAS_GRID_SIZE, IPosition } from "src/app/model/canvas.interface";
+import { CANVAS_GRID_SIZE } from "src/app/model/canvas.interface";
 import { WORKFLOW_ITEM } from "./workflow-item.config";
+import { SIDE, IPosition, INode } from "src/app/model/direction.interface";
 
 @Component({
   selector: "app-workflow-item",
@@ -19,13 +20,15 @@ export class WorkflowItemComponent implements OnInit, AfterViewInit {
   @Input() id;
   @Output() item = new EventEmitter<any>();
   @Output() nodeBinding = new EventEmitter<any>();
+
   public model: any = {};
   public deleted: boolean = false;
+  public SIDE = SIDE;
   public WORKFLOW_ITEM: any = WORKFLOW_ITEM;
 
   constructor() {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.model.id = this.id;
     this.model.type =
       this.id == 0 ? WORKFLOW_ITEM.TYPE.START : WORKFLOW_ITEM.TYPE.WEB_ELEMENT;
@@ -34,24 +37,24 @@ export class WorkflowItemComponent implements OnInit, AfterViewInit {
     this.model.browser_action = 0;
   }
 
-  ngAfterViewInit() {
+  ngAfterViewInit(): void {
     this.localeWorkflowItemNodes();
   }
 
-  submit() {
+  submit(): void {
     setTimeout(this.localeWorkflowItemNodes.bind(this), 0);
     $(`.workflow-item-body[id="${this.model.id}"]`).removeAttr("style");
 
     this.item.emit(this.getWorkflowItemData());
   }
 
-  delete() {
+  delete(): void {
     this.model = {};
     this.deleted = true;
     this.submit();
   }
 
-  localeWorkflowItemNodes() {
+  localeWorkflowItemNodes(): void {
     const item = $(`.workflow-item-body[id="${this.model.id}"]`);
     const width = item.outerWidth();
     let height = item.outerHeight();
@@ -66,29 +69,29 @@ export class WorkflowItemComponent implements OnInit, AfterViewInit {
     item.find(".bottom-node").css({ bottom: -4, left: (width - 6) / 2 });
   }
 
-  bindingNode(event, side) {
+  bindingNode(event: any, side: SIDE): void {
     const offset = $(event.srcElement).offset();
     let position: IPosition = {
       x: 0,
       y: 0,
     };
 
-    if (side == "top") {
+    if (side == SIDE.TOP) {
       position.y = offset.top + 3;
       position.x = offset.left + 3;
     }
 
-    if (side == "left") {
+    if (side == SIDE.LEFT) {
       position.y = offset.top + 3;
       position.x = offset.left + 3;
     }
 
-    if (side == "right") {
+    if (side == SIDE.RIGHT) {
       position.y = offset.top + 3;
       position.x = offset.left - 3;
     }
 
-    if (side == "bottom") {
+    if (side == SIDE.BOTTOM) {
       position.y = offset.top - 3;
       position.x = offset.left + 3;
     }
@@ -99,16 +102,17 @@ export class WorkflowItemComponent implements OnInit, AfterViewInit {
       ? "false"
       : "default";
 
-    this.nodeBinding.emit({
+    const node: INode = {
       id: this.model.id,
       side: side,
       type: type,
       position: position,
       color: $(event.srcElement).css("backgroundColor"),
-    });
+    };
+    this.nodeBinding.emit(node);
   }
 
-  getWorkflowItemData() {
+  getWorkflowItemData(): any {
     let type = "";
     for (let prop in WORKFLOW_ITEM.TYPE) {
       if (WORKFLOW_ITEM.TYPE[prop] == this.model.type) {
