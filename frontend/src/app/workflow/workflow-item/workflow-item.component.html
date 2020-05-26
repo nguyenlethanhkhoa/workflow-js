@@ -1,0 +1,200 @@
+<div class="workflow-item-body" *ngIf="!deleted" data-id="{{ model.id }}">
+  <span class="close" (click)="delete()" *ngIf="model.id != 0">x</span>
+  <!-- id -->
+  <div
+    class="form-group"
+    [hidden]="model.type != WORKFLOW_ITEM.TYPE.WEB_ELEMENT"
+  >
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Element Selector"
+      name="id"
+      value="#_{{ model.id }}"
+      [disabled]="true"
+    />
+  </div>
+
+  <!-- model.type -->
+  <div class="form-group">
+    <select
+      name="type"
+      class="form-control"
+      [disabled]="model.type == WORKFLOW_ITEM.TYPE.START"
+      [(ngModel)]="model.type"
+      (change)="submit()"
+    >
+      <option
+        *ngFor="let type of WORKFLOW_ITEM.TYPE | keyvalue"
+        value="{{ type.value }}"
+        >{{ type.key }}</option
+      >
+    </select>
+  </div>
+
+  <!-- model.web_element_selector -->
+  <div class="form-group" *ngIf="model.type == WORKFLOW_ITEM.TYPE.WEB_ELEMENT">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Element Selector"
+      name="web_element_selector"
+      [(ngModel)]="model.web_element_selector"
+      (change)="submit()"
+    />
+  </div>
+
+  <!-- model.web_element_action -->
+  <div class="form-group" *ngIf="model.type == WORKFLOW_ITEM.TYPE.WEB_ELEMENT">
+    <select
+      name="web_element_action"
+      class="form-control"
+      [(ngModel)]="model.web_element_action"
+      (change)="submit()"
+    >
+      <option value="0">-- Choose Action --</option>
+      <option
+        *ngFor="let action of WORKFLOW_ITEM.ELEMENT_ACTION | keyvalue"
+        value="{{ action.value }}"
+        >{{ action.key }}</option
+      >
+    </select>
+  </div>
+
+  <!-- model.web_element_fill_text_value -->
+  <div
+    class="form-group"
+    *ngIf="
+      model.type == WORKFLOW_ITEM.TYPE.WEB_ELEMENT &&
+      model.web_element_action == WORKFLOW_ITEM.ELEMENT_ACTION.FILL_TEXT
+    "
+  >
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Value"
+      name="web_element_fill_text_value"
+      [(ngModel)]="model.web_element_fill_text_value"
+      (change)="submit()"
+    />
+  </div>
+
+  <!-- model.condition_left -- model.condition_operator -- model.condition_right -->
+  <div
+    class="form-group row"
+    *ngIf="model.type == WORKFLOW_ITEM.TYPE.CONDITION"
+  >
+    <div class="col-sm-5">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Value 1"
+        name="condition_left"
+        [(ngModel)]="model.condition_left"
+        (change)="submit()"
+      />
+    </div>
+
+    <div class="col-sm-2 no-space">
+      <select
+        name="condition_operator"
+        class="form-control"
+        [(ngModel)]="model.condition_operator"
+        (change)="submit()"
+      >
+        <option value="1">=</option>
+        <option value="2">!=</option>
+        <option value="3">&gt;</option>
+        <option value="4">&gt;=</option>
+        <option value="5">&lt;</option>
+        <option value="6">&lt;=</option>
+      </select>
+    </div>
+
+    <div class="col-sm-5">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Value 2"
+        name="condition_right"
+        [(ngModel)]="model.condition_right"
+        (change)="submit()"
+      />
+    </div>
+  </div>
+
+  <!-- model.assign_variable_name -- model.assign_variable_value  -->
+  <div class="form-group row" *ngIf="model.type == WORKFLOW_ITEM.TYPE.ASSIGN">
+    <div class="col-sm-5">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Variable Name"
+        name="assign_variable_name"
+        [(ngModel)]="model.assign_variable_name"
+        (change)="submit()"
+      />
+    </div>
+
+    <div class="col-sm-2 text-center">=</div>
+
+    <div class="col-sm-5">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Variable Value"
+        name="assign_variable_value"
+        [(ngModel)]="model.assign_variable_value"
+        (change)="submit()"
+      />
+    </div>
+  </div>
+
+  <!-- model.browser_action  -->
+  <div class="form-group" *ngIf="model.type == WORKFLOW_ITEM.TYPE.BROWSER">
+    <select
+      name="browser_action"
+      class="form-control"
+      [(ngModel)]="model.browser_action"
+      (change)="submit()"
+    >
+      <option value="0">-- Choose Action --</option>
+      <option value="1">Access Link</option>
+    </select>
+  </div>
+
+  <!-- model.browser_link  -->
+  <div
+    class="form-group"
+    *ngIf="
+      model.type == WORKFLOW_ITEM.TYPE.BROWSER &&
+      model.browser_action == WORKFLOW_ITEM.BROWSER_ACTION.ACCESS_LINK
+    "
+  >
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Link"
+      name="browser_link"
+      [(ngModel)]="model.browser_link"
+      (change)="submit()"
+    />
+  </div>
+
+  <div class="top-node node" (click)="bindingNode($event, 'top')"></div>
+  <div
+    class="left-node node"
+    [ngClass]="{ 'true-node': model.type == WORKFLOW_ITEM.TYPE.CONDITION }"
+    (click)="bindingNode($event, 'left')"
+  ></div>
+  <div
+    class="right-node node"
+    [ngClass]="{ 'false-node': model.type == WORKFLOW_ITEM.TYPE.CONDITION }"
+    (click)="bindingNode($event, 'right')"
+  ></div>
+  <div
+    class="bottom-node node"
+    *ngIf="model.type != WORKFLOW_ITEM.TYPE.CONDITION"
+    (click)="bindingNode($event, 'bottom')"
+  ></div>
+</div>

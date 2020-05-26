@@ -1,0 +1,14 @@
+<div class="canvas-wrapper">
+  <canvas id="canvas"></canvas>
+</div>
+<app-workflow-item
+  class="workflow-item"
+  *ngFor="let item of items"
+  [id]="item.id"
+  (item)="buildWorkflowItem($event)"
+  (nodeBinding)="drawWorkflowDirectionInCanvas($event)"
+></app-workflow-item>
+<button class="btn btn-default add-btn" (click)="addWorkflowItem()">Add</button>
+<button class="btn btn-default execute-btn" (click)="executeWorkflow()">
+  Execute
+</button>

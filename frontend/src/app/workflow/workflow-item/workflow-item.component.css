@@ -1,0 +1,33 @@
+.no-space {
+  padding: 0px !important;
+}
+
+.workflow-item-body {
+  position: relative;
+  padding: 15px;
+  padding-bottom: 1px;
+  border: 1px solid #bbbbbb;
+}
+
+.close {
+  position: absolute;
+  top: 0px;
+  right: 5px;
+}
+
+.node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: black;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.true-node {
+  background: green;
+}
+
+.false-node {
+  background: red;
+}
