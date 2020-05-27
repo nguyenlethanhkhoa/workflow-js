@@ -2,7 +2,7 @@ import * as $ from "jquery";
 import "jquery-ui-dist/jquery-ui";
 
 import { HttpClient } from "@angular/common/http";
-import { Component, OnInit, AfterViewInit } from "@angular/core";
+import { Component, OnInit, AfterViewInit, Input } from "@angular/core";
 import {
   ICanvas,
   CANVAS_ARROW_HEIGHT,
@@ -11,15 +11,24 @@ import {
   CANVAS_LINE_WIDTH,
 } from "../model/canvas.interface";
 import { CanvasArrowService } from "../service/canvas-arrow.service";
-import { IPosition, INode } from "../model/direction.interface";
+import { IPosition, INode, IDirection } from "../model/direction.interface";
+import { IWorkflowItemsPosition } from "../model/workflow.interface";
+import { WorkflowService } from "../api/workflow.service";
 
 @Component({
   selector: "app-workflow",
   templateUrl: "./workflow.component.html",
   styleUrls: ["./workflow.component.css"],
 })
-export class WorkflowComponent implements OnInit, AfterViewInit {
+export class WorkflowComponent implements AfterViewInit {
+  @Input() workflow: any;
+
   public items: any = [{ id: 0 }];
+  public isSaving: boolean = false;
+  public workflowName: string = "";
+
+  private workflowDirections: Array<IDirection> = [];
+  private workflowItemsPosition: IWorkflowItemsPosition = {};
 
   private workflowItems: any = { 0: { id: 0, type: 0 } };
   private startDirectionNode: INode;
@@ -32,9 +41,10 @@ export class WorkflowComponent implements OnInit, AfterViewInit {
     nodeDirection: null,
   };
 
-  constructor(private arrowService: CanvasArrowService) {}
-
-  ngOnInit() {}
+  constructor(
+    private workflowService: WorkflowService,
+    private canvasArrowService: CanvasArrowService
+  ) {}
 
   ngAfterViewInit() {
     $(".canvas-wrapper").width(window.innerWidth);
@@ -45,27 +55,54 @@ export class WorkflowComponent implements OnInit, AfterViewInit {
     this.canvas.element.height = window.innerHeight;
     this.canvas.context = this.canvas.element.getContext("2d");
     this._initGridInCanvas();
+    this._initDraggableInWorkflowItem();
 
-    $("body").delegate(".workflow-item", "mouseover", function () {
-      $(this).draggable({
-        stop: function (event, ui) {
-          let top = Math.floor(ui.position.top / CANVAS_GRID_SIZE);
-          if (ui.position.top % CANVAS_GRID_SIZE >= CANVAS_GRID_SIZE / 2) {
-            top = Math.floor(ui.position.top / CANVAS_GRID_SIZE) + 1;
+    this.workflowItemsPosition[0] = { x: 0, y: 0 };
+
+    this._temporaryFunc().then((resp) => {
+      this.workflow = JSON.parse(resp.items[0].content);
+      this.items = this.workflow.items;
+
+      setTimeout(() => {
+        for (let workflowId in this.workflow.itemsPosition) {
+          if (!this.workflow.itemsPosition.hasOwnProperty(workflowId)) {
+            return;
           }
 
-          let left = Math.floor(ui.position.left / CANVAS_GRID_SIZE);
-          if (ui.position.left % CANVAS_GRID_SIZE >= CANVAS_GRID_SIZE / 2) {
-            left = Math.floor(ui.position.left / CANVAS_GRID_SIZE) + 1;
-          }
-
-          $(this).css({
-            top: top * CANVAS_GRID_SIZE,
-            left: left * CANVAS_GRID_SIZE,
+          $(`.workflow-item-body#${workflowId}`).parent().css({
+            top: this.workflow.itemsPosition[workflowId].y,
+            left: this.workflow.itemsPosition[workflowId].x,
           });
-        },
-      });
+        }
+      }, 0);
+
+      for (let i = 0; i < this.workflow.directions.length; i++) {
+        this.canvas.nodeDirection = this.workflow.directions[i];
+        this.canvasArrowService.draw(this.canvas);
+        this.canvas.nodeDirection = null;
+      }
     });
+  }
+
+  public saveWorkflow(): void {
+    if (!this.isSaving) {
+      this.isSaving = true;
+      return;
+    }
+
+    this.workflowService
+      .save({
+        name: this.workflowName,
+        workflow: {
+          items: this.items,
+          directions: this.workflowDirections,
+          itemsPosition: this.workflowItemsPosition,
+        },
+      })
+      .subscribe((resp) => {
+        console.log(resp);
+        this.isSaving = false;
+      });
   }
 
   public addWorkflowItem(): void {
@@ -75,14 +112,14 @@ export class WorkflowComponent implements OnInit, AfterViewInit {
   }
 
   public executeWorkflow(): void {
-    // this.http
-    //   .post("http://localhost:3000/workflow/execute", {
-    //     items: this.workflowItems,
-    //     graph: this.workflowGraph,
-    //   })
-    //   .subscribe((resp) => {
-    //     console.log(resp);
-    //   });
+    this.workflowService
+      .execute({
+        items: this.workflowItems,
+        graph: this.workflowGraph,
+      })
+      .subscribe((resp) => {
+        console.log(resp);
+      });
   }
 
   public buildWorkflowItem(item: any): void {
@@ -132,8 +169,9 @@ export class WorkflowComponent implements OnInit, AfterViewInit {
 
     this.canvas.nodeDirection.to = node.position;
     this.canvas.nodeDirection.toSide = node.side;
+    this.workflowDirections.push(this.canvas.nodeDirection);
 
-    this.arrowService.draw(this.canvas);
+    this.canvasArrowService.draw(this.canvas);
     this.canvas.nodeDirection = null;
   }
 
@@ -179,5 +217,39 @@ export class WorkflowComponent implements OnInit, AfterViewInit {
     this.workflowGraph[this.startDirectionNode.id][
       endDirectionNode.id
     ] = this.startDirectionNode.type;
+  }
+
+  private _initDraggableInWorkflowItem() {
+    $("body").delegate(".workflow-item", "mouseover", (e) => {
+      $(e.currentTarget).draggable({
+        stop: (event, ui) => {
+          let top = Math.floor(ui.position.top / CANVAS_GRID_SIZE);
+          if (ui.position.top % CANVAS_GRID_SIZE >= CANVAS_GRID_SIZE / 2) {
+            top = Math.floor(ui.position.top / CANVAS_GRID_SIZE) + 1;
+          }
+
+          let left = Math.floor(ui.position.left / CANVAS_GRID_SIZE);
+          if (ui.position.left % CANVAS_GRID_SIZE >= CANVAS_GRID_SIZE / 2) {
+            left = Math.floor(ui.position.left / CANVAS_GRID_SIZE) + 1;
+          }
+
+          $(event.target).css({
+            top: top * CANVAS_GRID_SIZE,
+            left: left * CANVAS_GRID_SIZE,
+          });
+
+          const id = $(event.target).find(".workflow-item-body").attr("id");
+          this.workflowItemsPosition[parseInt(id)] = {
+            x: left * CANVAS_GRID_SIZE,
+            y: top * CANVAS_GRID_SIZE,
+          };
+        },
+      });
+    });
+  }
+
+  // this function is defined for test. It will be delete later.
+  private async _temporaryFunc() {
+    return await this.workflowService.list().toPromise();
   }
 }

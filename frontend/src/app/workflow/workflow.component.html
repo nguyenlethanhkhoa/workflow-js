@@ -5,10 +5,68 @@
   class="workflow-item"
   *ngFor="let item of items"
   [id]="item.id"
+  [data]="item.data"
   (item)="buildWorkflowItem($event)"
   (nodeBinding)="drawWorkflowDirectionInCanvas($event)"
 ></app-workflow-item>
 <button class="btn btn-default add-btn" (click)="addWorkflowItem()">Add</button>
+<button class="btn btn-default save-btn" (click)="saveWorkflow()">
+  Save
+</button>
 <button class="btn btn-default execute-btn" (click)="executeWorkflow()">
   Execute
 </button>
+
+<div
+  class="modal"
+  style="display: block;"
+  tabindex="-1"
+  role="dialog"
+  *ngIf="isSaving"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button
+          type="button"
+          class="close"
+          data-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group row">
+          <label class="col-sm-2 control-label">Name</label>
+          <div class="col-sm-10">
+            <input
+              type="text"
+              class="form-control"
+              name="workflow_name"
+              placeholder="Workflow Name"
+              [(ngModel)]="workflowName"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-default"
+          data-dismiss="modal"
+          (click)="(!isSaving)"
+        >
+          Close
+        </button>
+        <button type="button" class="btn btn-primary" (click)="saveWorkflow()">
+          Save
+        </button>
+      </div>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->

@@ -18,23 +18,32 @@ import { SIDE, IPosition, INode } from "src/app/model/direction.interface";
 })
 export class WorkflowItemComponent implements OnInit, AfterViewInit {
   @Input() id;
+  @Input() data;
+
   @Output() item = new EventEmitter<any>();
   @Output() nodeBinding = new EventEmitter<any>();
 
+  public SIDE = SIDE;
   public model: any = {};
   public deleted: boolean = false;
-  public SIDE = SIDE;
   public WORKFLOW_ITEM: any = WORKFLOW_ITEM;
 
   constructor() {}
 
   ngOnInit(): void {
-    this.model.id = this.id;
-    this.model.type =
-      this.id == 0 ? WORKFLOW_ITEM.TYPE.START : WORKFLOW_ITEM.TYPE.WEB_ELEMENT;
-    this.model.web_element_action = 0;
-    this.model.condition_operator = 1;
-    this.model.browser_action = 0;
+    if (this.data) {
+      Object.assign(this.model, this.data);
+    } else {
+      this.model.id = this.id;
+      this.model.type =
+        this.id == 0
+          ? WORKFLOW_ITEM.TYPE.START
+          : WORKFLOW_ITEM.TYPE.WEB_ELEMENT;
+      this.model.web_element_action = 0;
+      this.model.condition_operator = 1;
+      this.model.browser_action = 0;
+    }
+    this.submit();
   }
 
   ngAfterViewInit(): void {

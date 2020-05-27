@@ -16,8 +16,15 @@
   top: 0px;
   left: 0px;
 }
+
 .execute-btn {
   position: fixed;
-  top: 50px;
-  left: 0px;
+  top: 0px;
+  left: 150px;
+}
+
+.save-btn {
+  position: fixed;
+  top: 0px;
+  left: 75px;
 }

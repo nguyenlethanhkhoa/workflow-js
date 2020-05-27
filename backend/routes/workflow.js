@@ -2,6 +2,7 @@ var express = require("express");
 var router = express.Router();
 const { exec } = require("child_process");
 const fs = require("fs");
+const database = require("./../database");
 
 let systemVariables = {};
 
@@ -175,8 +176,7 @@ const parseDataWithType = function (value) {
 	return `"${value}"`;
 };
 
-/* GET users listing. */
-router.post("/execute", function (req, res, next) {
+router.post("/execute", function (req, res) {
 	let content = "";
 	let userDefinedVariables = {};
 
@@ -292,6 +292,37 @@ router.post("/execute", function (req, res, next) {
 	});
 
 	// cd c:\\xampp\\htdocs\\2_Learning_Project\\nodejs\\workflow-js-backend
+});
+
+router.post("/save", function (req, res) {
+	const values = `('${req.body.name}', '${JSON.stringify(req.body.workflow)}');`;
+	database.query("insert into workflow (`name`, `content`) values " + values, (err, results) => {
+		if (err) {
+			res.status(500).send({
+				error: err.sqlMessage,
+			});
+			return;
+		}
+		res.status(200).send({
+			status: "success",
+		});
+	});
+});
+
+router.get("/list", function (req, res) {
+	database.query("select `id`, `name`, `content` from workflow", (err, results) => {
+		if (err) {
+			res.status(500).send({
+				error: err.sqlMessage,
+			});
+			return;
+		}
+
+		res.status(200).send({
+			status: "success",
+			items: results,
+		});
+	});
 });
 
 module.exports = router;
