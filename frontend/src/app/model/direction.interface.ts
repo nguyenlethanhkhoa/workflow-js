@@ -7,6 +7,10 @@ export interface IDirection {
   direction: DIRECTION;
 }
 
+export interface IDirectionList {
+  [key: number]: IDirection;
+}
+
 export interface ISize {
   width: number;
   height: number;

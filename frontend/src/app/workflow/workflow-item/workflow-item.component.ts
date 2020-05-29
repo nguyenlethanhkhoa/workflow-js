@@ -43,7 +43,7 @@ export class WorkflowItemComponent implements OnInit, AfterViewInit {
       this.model.condition_operator = 1;
       this.model.browser_action = 0;
     }
-    this.submit();
+    setTimeout(this.submit.bind(this), 0);
   }
 
   ngAfterViewInit(): void {

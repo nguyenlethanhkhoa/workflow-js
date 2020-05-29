@@ -12,27 +12,26 @@ import {
 } from "../model/canvas.interface";
 import { CanvasArrowService } from "../service/canvas-arrow.service";
 import { IPosition, INode, IDirection } from "../model/direction.interface";
-import { IWorkflowItemsPosition } from "../model/workflow.interface";
+import {
+  IWorkflowItemsPosition,
+  IWorkflow,
+  IWorkflowItem,
+} from "../model/workflow.interface";
 import { WorkflowService } from "../api/workflow.service";
+import { WORKFLOW_ITEM } from "./workflow-item/workflow-item.config";
 
 @Component({
   selector: "app-workflow",
   templateUrl: "./workflow.component.html",
   styleUrls: ["./workflow.component.css"],
 })
-export class WorkflowComponent implements AfterViewInit {
-  @Input() workflow: any;
+export class WorkflowComponent implements OnInit, AfterViewInit {
+  @Input() workflow: IWorkflow;
 
   public items: any = [{ id: 0 }];
   public isSaving: boolean = false;
-  public workflowName: string = "";
 
-  private workflowDirections: Array<IDirection> = [];
-  private workflowItemsPosition: IWorkflowItemsPosition = {};
-
-  private workflowItems: any = { 0: { id: 0, type: 0 } };
   private startDirectionNode: INode;
-  private workflowGraph: any = {};
   private autoIncrementId = 0;
   private canvas: ICanvas = {
     element: null,
@@ -46,6 +45,24 @@ export class WorkflowComponent implements AfterViewInit {
     private canvasArrowService: CanvasArrowService
   ) {}
 
+  ngOnInit() {
+    if (this.workflow) {
+      return;
+    }
+
+    const start: IWorkflowItem = {
+      data: { id: 0, type: WORKFLOW_ITEM.TYPE.START },
+      position: { x: 0, y: 0 },
+      directions: {},
+      uiDirections: {},
+    };
+
+    this.workflow = {
+      name: "",
+      items: { 0: start },
+    };
+  }
+
   ngAfterViewInit() {
     $(".canvas-wrapper").width(window.innerWidth);
     $(".canvas-wrapper").height(window.innerHeight);
@@ -57,31 +74,30 @@ export class WorkflowComponent implements AfterViewInit {
     this._initGridInCanvas();
     this._initDraggableInWorkflowItem();
 
-    this.workflowItemsPosition[0] = { x: 0, y: 0 };
+    // this._temporaryFunc().then((resp) => {
+    //   this.workflow = JSON.parse(resp.items[0].content);
+    //   this.items = resp.workflow.items;
+    //   this.workflowGraph = resp.workflow.graph;
 
-    this._temporaryFunc().then((resp) => {
-      this.workflow = JSON.parse(resp.items[0].content);
-      this.items = this.workflow.items;
+    //   setTimeout(() => {
+    //     for (let workflowId in this.workflow.itemsPosition) {
+    //       if (!this.workflow.itemsPosition.hasOwnProperty(workflowId)) {
+    //         return;
+    //       }
 
-      setTimeout(() => {
-        for (let workflowId in this.workflow.itemsPosition) {
-          if (!this.workflow.itemsPosition.hasOwnProperty(workflowId)) {
-            return;
-          }
+    //       $(`.workflow-item-body#${workflowId}`).parent().css({
+    //         top: this.workflow.itemsPosition[workflowId].y,
+    //         left: this.workflow.itemsPosition[workflowId].x,
+    //       });
+    //     }
+    //   }, 0);
 
-          $(`.workflow-item-body#${workflowId}`).parent().css({
-            top: this.workflow.itemsPosition[workflowId].y,
-            left: this.workflow.itemsPosition[workflowId].x,
-          });
-        }
-      }, 0);
-
-      for (let i = 0; i < this.workflow.directions.length; i++) {
-        this.canvas.nodeDirection = this.workflow.directions[i];
-        this.canvasArrowService.draw(this.canvas);
-        this.canvas.nodeDirection = null;
-      }
-    });
+    //   for (let i = 0; i < this.workflow.directions.length; i++) {
+    //     this.canvas.nodeDirection = this.workflow.directions[i];
+    //     this.canvasArrowService.draw(this.canvas);
+    //     this.canvas.nodeDirection = null;
+    //   }
+    // });
   }
 
   public saveWorkflow(): void {
@@ -90,32 +106,39 @@ export class WorkflowComponent implements AfterViewInit {
       return;
     }
 
-    this.workflowService
-      .save({
-        name: this.workflowName,
-        workflow: {
-          items: this.items,
-          directions: this.workflowDirections,
-          itemsPosition: this.workflowItemsPosition,
-        },
-      })
-      .subscribe((resp) => {
-        console.log(resp);
-        this.isSaving = false;
-      });
+    console.log(this.workflow);
+
+    // this.workflowService
+    //   .save({
+    //     name: this.workflowName,
+    //     workflow: {
+    //       items: this.items,
+    //       graph: this.workflowGraph,
+    //       directions: this.workflowDirections,
+    //       itemsPosition: this.workflowItemsPosition,
+    //     },
+    //   })
+    //   .subscribe((resp) => {
+    //     console.log(resp);
+    //     this.isSaving = false;
+    //   });
   }
 
   public addWorkflowItem(): void {
     this.autoIncrementId++;
     this.items.push({ id: this.autoIncrementId });
-    this.workflowItems[this.autoIncrementId] = { id: this.autoIncrementId };
+    this.workflow.items[this.autoIncrementId] = {
+      data: { id: this.autoIncrementId },
+      position: { x: 0, y: 0 },
+      directions: {},
+      uiDirections: {},
+    };
   }
 
   public executeWorkflow(): void {
     this.workflowService
       .execute({
-        items: this.workflowItems,
-        graph: this.workflowGraph,
+        workflow: this.workflow,
       })
       .subscribe((resp) => {
         console.log(resp);
@@ -123,7 +146,8 @@ export class WorkflowComponent implements AfterViewInit {
   }
 
   public buildWorkflowItem(item: any): void {
-    this.workflowItems[item.id] = item;
+    console.log(this.workflow);
+    this.workflow.items[item.id].data = item;
     for (let i = 0; i <= this.items.length; i++) {
       if (
         typeof this.items[i] != "object" ||
@@ -165,11 +189,13 @@ export class WorkflowComponent implements AfterViewInit {
       return;
     }
 
-    this._addDirectionIntoWorkflowGraph(node);
+    this._addWorkflowDirection(node);
 
     this.canvas.nodeDirection.to = node.position;
     this.canvas.nodeDirection.toSide = node.side;
-    this.workflowDirections.push(this.canvas.nodeDirection);
+    this.workflow.items[this.startDirectionNode.id].uiDirections[
+      this.canvas.nodeDirection.fromSide
+    ] = this.canvas.nodeDirection;
 
     this.canvasArrowService.draw(this.canvas);
     this.canvas.nodeDirection = null;
@@ -209,12 +235,16 @@ export class WorkflowComponent implements AfterViewInit {
     }
   }
 
-  private _addDirectionIntoWorkflowGraph(endDirectionNode: INode): void {
-    if (!this.workflowGraph.hasOwnProperty(this.startDirectionNode.id)) {
-      this.workflowGraph[this.startDirectionNode.id] = {};
+  private _addWorkflowDirection(endDirectionNode: INode): void {
+    if (
+      !this.workflow.items[
+        this.startDirectionNode.id
+      ].directions.hasOwnProperty(this.startDirectionNode.id)
+    ) {
+      this.workflow.items[this.startDirectionNode.id].directions = {};
     }
 
-    this.workflowGraph[this.startDirectionNode.id][
+    this.workflow.items[this.startDirectionNode.id].directions[
       endDirectionNode.id
     ] = this.startDirectionNode.type;
   }
@@ -239,7 +269,7 @@ export class WorkflowComponent implements AfterViewInit {
           });
 
           const id = $(event.target).find(".workflow-item-body").attr("id");
-          this.workflowItemsPosition[parseInt(id)] = {
+          this.workflow.items[parseInt(id)].position = {
             x: left * CANVAS_GRID_SIZE,
             y: top * CANVAS_GRID_SIZE,
           };
