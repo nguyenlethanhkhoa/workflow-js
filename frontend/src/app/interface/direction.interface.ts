@@ -5,6 +5,7 @@ export interface IDirection {
   toSide: SIDE;
   color: string;
   direction: DIRECTION;
+  paths: Array<IPath>;
 }
 
 export interface IDirectionList {
@@ -27,6 +28,11 @@ export interface INode {
   type: string;
   position: IPosition;
   color: string;
+}
+
+export interface IPath {
+  from: IPosition;
+  to: IPosition;
 }
 
 export enum SIDE {

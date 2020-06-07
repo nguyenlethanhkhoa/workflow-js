@@ -28,3 +28,7 @@
   top: 0px;
   left: 75px;
 }
+
+.pointer {
+  cursor: pointer;
+}

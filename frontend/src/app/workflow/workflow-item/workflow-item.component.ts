@@ -7,9 +7,9 @@ import {
   EventEmitter,
   AfterViewInit,
 } from "@angular/core";
-import { CANVAS_GRID_SIZE } from "src/app/model/canvas.interface";
+import { CANVAS_GRID_SIZE } from "src/app/interface/canvas.interface";
 import { WORKFLOW_ITEM } from "./workflow-item.config";
-import { SIDE, IPosition, INode } from "src/app/model/direction.interface";
+import { SIDE, IPosition, INode } from "src/app/interface/direction.interface";
 
 @Component({
   selector: "app-workflow-item",
